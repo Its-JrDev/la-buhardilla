@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .brand-roof {
+        fill: #312e81;
+        stroke: #fdfbf7;
+        stroke-width: 0.8;
+      }
+      .brand-window-frame {
+        stroke: #312e81;
+      }
+    }
+  </style>
+  <path class="brand-roof" d="M5 38V19L3 20 20 4l17 15-2-.5V38Z" fill="#1e1b4b" />
+  <path class="brand-roof" d="M26 9V4h4v9" fill="#1e1b4b" />
+  <circle cx="20" cy="20" r="5.5" fill="#f97316" />
+  <path class="brand-window-frame" d="M20 14.5v11M14.5 20h11" stroke="#1e1b4b" stroke-width="1.6" stroke-linecap="round" />
+  <path d="M16 38v-7a4 4 0 0 1 8 0v7" fill="#fdba74" />
+</svg>
