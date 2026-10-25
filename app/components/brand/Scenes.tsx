@@ -194,15 +194,15 @@ export function HeroScene() {
         className="absolute rounded-full"
         style={{
           right: '6%',
-          top: '2%',
+          top: '6%',
           width: pct(52.273),
           aspectRatio: '1',
           background: 'radial-gradient(circle at 40% 40%, #fff7ed 0%, #fdba74 60%, #fb923c 100%)',
-          boxShadow: `0 0 ${pct(20.455)} ${pct(6.818)} rgba(253, 186, 116, 0.35)`,
+          boxShadow: `0 0 ${pct(12)} ${pct(3)} rgba(253, 186, 116, 0.4)`,
         }}
       />
-      <Bat style={abs({left: '4%', top: '8%', width: pct(18.182)})} />
-      <Bat style={abs({left: '58%', top: '18%', width: pct(11.818), transform: 'rotate(14deg)'})} />
+      <Bat style={abs({left: '4%', top: '10%', width: pct(18.182)})} />
+      <Bat style={abs({left: '58%', top: '20%', width: pct(11.818), transform: 'rotate(14deg)'})} />
       <Bat style={abs({left: '88%', top: '50%', width: pct(9.091), transform: 'rotate(-10deg)'})} />
       <svg style={abs({left: '50%', bottom: 0, transform: 'translateX(-50%)', width: pct(77.273)})} viewBox="0 0 340 400">
         <path d="M90 120 96 70h20l2 40Z" fill="#1e1b4b" />

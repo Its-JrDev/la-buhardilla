@@ -37,7 +37,7 @@ export default function Homepage() {
   return (
     <>
       <div className="relative bg-[linear-gradient(180deg,#2e1065_0%,#4c1d95_55%,#6b21a8_100%)] text-ghost">
-        <section className="mx-auto box-border flex max-w-[1280px] flex-wrap items-center gap-x-16 gap-y-6 px-6 pb-4 pt-6 md:pt-10">
+        <section className="mx-auto box-border flex max-w-[1280px] flex-wrap items-center gap-x-16 gap-y-6 px-6 pb-2 pt-8 md:pt-14">
           <div className="flex min-w-0 flex-[1_1_460px] flex-col gap-6">
             <h1 className="m-0 font-serif text-[40px] font-black leading-[1.08] md:text-[64px]">
               Sube a la buhardilla. <span className="italic text-pumpkin-soft">Algo te espera</span> entre los estantes.
