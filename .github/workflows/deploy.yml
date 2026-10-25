@@ -31,6 +31,15 @@ jobs:
         run: npm run typecheck
 
       - name: Deploy to Oxygen
+        if: env.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN != ''
         run: npx shopify hydrogen deploy
+        env:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN }}
+
+      - name: Missing Deployment Token Notice
+        if: env.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN == ''
+        run: |
+          echo "::warning::SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN secret is not set in GitHub repository settings. Skipping deployment to Oxygen."
+          echo "To enable automatic deployments, add SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN in your repo settings."
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN }}
