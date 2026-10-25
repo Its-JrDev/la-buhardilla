@@ -1,6 +1,7 @@
 {
   "name": "la-buhardilla",
   "description": "La Buhardilla - Tienda editorial headless de libros raros construida con Shopify Hydrogen, Tailwind CSS y Oxygen",
+  "author": "Jose D. Romero <https://its-jr.dev>",
   "private": true,
   "sideEffects": false,
   "version": "2026.4.8",

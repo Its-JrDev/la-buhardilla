@@ -72,8 +72,21 @@ export function Footer() {
             </nav>
           ))}
         </div>
-        <div className="flex flex-wrap justify-between gap-3 border-t border-slate pt-6 text-sm text-slate-400">
-          <span>© {new Date().getFullYear()} La Buhardilla</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate pt-6 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center gap-4">
+            <span>© {new Date().getFullYear()} La Buhardilla</span>
+            <span>
+              Made by{' '}
+              <a
+                className="text-slate-300 transition-colors duration-200 hover:text-ghost"
+                href="https://its-jr.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Jose D. Romero
+              </a>
+            </span>
+          </div>
           <span className="font-serif italic text-witch-light">Lee con la luz encendida.</span>
         </div>
       </div>
