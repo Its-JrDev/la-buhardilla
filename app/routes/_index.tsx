@@ -58,8 +58,8 @@ export default function Homepage() {
             <HeroScene />
           </div>
         </section>
-        <Drip bg="#fdfbf7" />
       </div>
+      <Drip />
 
       <div className="mx-auto box-border flex max-w-[1280px] flex-col gap-20 px-4 pb-24 md:gap-24 md:px-6">
         <section className="flex flex-col gap-9 pt-6">
