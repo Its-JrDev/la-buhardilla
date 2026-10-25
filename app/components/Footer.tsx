@@ -1,129 +1,82 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from 'react-router';
-import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
+import {Form, Link} from 'react-router';
+import {Drip} from '~/components/brand/Drip';
 
-interface FooterProps {
-  footer: Promise<FooterQuery | null>;
-  header: HeaderQuery;
-  publicStoreDomain: string;
-}
+const COLUMNS = [
+  {
+    title: 'Explorar',
+    links: [
+      ['Horror', '/collections/horror'],
+      ['Thriller', '/collections/thriller'],
+      ['Terror fantástico', '/collections/terror-fantastico'],
+      ['Ediciones raras', '/collections/ediciones-raras'],
+    ],
+  },
+  {
+    title: 'La Buhardilla',
+    links: [
+      ['Quiénes somos', '/quienes-somos'],
+      ['Club de medianoche', '/club'],
+      ['Visítanos', '/visitanos'],
+    ],
+  },
+  {
+    title: 'Ayuda',
+    links: [
+      ['Envíos', '/ayuda/envios'],
+      ['Devoluciones', '/ayuda/devoluciones'],
+      ['Preguntas frecuentes', '/ayuda'],
+    ],
+  },
+] as const;
 
-export function Footer({
-  footer: footerPromise,
-  header,
-  publicStoreDomain,
-}: FooterProps) {
+export function Footer() {
   return (
-    <Suspense>
-      <Await resolve={footerPromise}>
-        {(footer) => (
-          <footer className="footer">
-            {footer?.menu && header.shop.primaryDomain?.url && (
-              <FooterMenu
-                menu={footer.menu}
-                primaryDomainUrl={header.shop.primaryDomain.url}
-                publicStoreDomain={publicStoreDomain}
+    <footer className="bg-midnight text-slate-200">
+      <Drip fill="#f3e8ff" flip />
+      <div className="mx-auto box-border flex max-w-[1280px] flex-col gap-12 px-6 pb-10 pt-6">
+        <div className="flex flex-wrap gap-12">
+          <Form method="post" action="/boletin" className="flex flex-[2_1_380px] flex-col gap-3.5">
+            <h2 className="m-0 font-serif text-[30px] font-black text-ghost">Únete al aquelarre</h2>
+            <p className="m-0 max-w-[440px] text-base leading-relaxed text-slate-300">
+              Una carta cada luna llena: novedades, ediciones raras y la fecha del próximo club de medianoche.
+            </p>
+            <label htmlFor="ft-mail" className="text-sm font-bold text-witch-light">
+              Correo electrónico
+            </label>
+            <div className="flex flex-wrap gap-2.5">
+              <input
+                id="ft-mail"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="tu@correo.com"
+                className="box-border min-h-12 min-w-0 flex-[1_1_220px] rounded-full border-2 border-ghost bg-ghost px-[18px] font-sans text-base text-midnight"
               />
-            )}
-          </footer>
-        )}
-      </Await>
-    </Suspense>
+              <button
+                type="submit"
+                className="min-h-12 cursor-pointer rounded-full border-0 bg-pumpkin-light px-6 font-sans text-base font-extrabold text-midnight hover:bg-pumpkin-soft"
+              >
+                Suscribirme
+              </button>
+            </div>
+          </Form>
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title} className="flex flex-[1_1_160px] flex-col gap-1">
+              <h3 className="m-0 mb-2 text-[13px] font-extrabold uppercase tracking-[0.14em] text-pumpkin-light">{col.title}</h3>
+              {col.links.map(([label, to]) => (
+                <Link key={to} to={to} prefetch="intent" className="flex min-h-9 items-center text-slate-200 no-underline hover:text-pumpkin-soft">
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          ))}
+        </div>
+        <div className="flex flex-wrap justify-between gap-3 border-t border-slate pt-6 text-sm text-slate-400">
+          <span>© {new Date().getFullYear()} La Buhardilla</span>
+          <span className="font-serif italic text-witch-light">Lee con la luz encendida.</span>
+        </div>
+      </div>
+    </footer>
   );
-}
-
-function FooterMenu({
-  menu,
-  primaryDomainUrl,
-  publicStoreDomain,
-}: {
-  menu: FooterQuery['menu'];
-  primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
-  publicStoreDomain: string;
-}) {
-  return (
-    <nav className="footer-menu" role="navigation">
-      {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
-        if (!item.url) return null;
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        const isExternal = !url.startsWith('/');
-        return isExternal ? (
-          <a href={url} key={item.id} rel="noopener noreferrer" target="_blank">
-            {item.title}
-          </a>
-        ) : (
-          <NavLink
-            end
-            key={item.id}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
-}
-
-const FALLBACK_FOOTER_MENU = {
-  id: 'gid://shopify/Menu/199655620664',
-  items: [
-    {
-      id: 'gid://shopify/MenuItem/461633060920',
-      resourceId: 'gid://shopify/ShopPolicy/23358046264',
-      tags: [],
-      title: 'Privacy Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/privacy-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633093688',
-      resourceId: 'gid://shopify/ShopPolicy/23358013496',
-      tags: [],
-      title: 'Refund Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/refund-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633126456',
-      resourceId: 'gid://shopify/ShopPolicy/23358111800',
-      tags: [],
-      title: 'Shipping Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/shipping-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633159224',
-      resourceId: 'gid://shopify/ShopPolicy/23358079032',
-      tags: [],
-      title: 'Terms of Service',
-      type: 'SHOP_POLICY',
-      url: '/policies/terms-of-service',
-      items: [],
-    },
-  ],
-};
-
-function activeLinkStyle({
-  isActive,
-  isPending,
-}: {
-  isActive: boolean;
-  isPending: boolean;
-}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'white',
-  };
 }

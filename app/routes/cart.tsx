@@ -1,11 +1,12 @@
-import {useLoaderData, data, type HeadersFunction} from 'react-router';
+import {Link, useLoaderData, data, type HeadersFunction} from 'react-router';
 import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
+import {PageHead} from '~/components/ui';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Cart`}];
+  return [{title: 'Tu selección | La Buhardilla'}];
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
@@ -103,10 +104,15 @@ export async function loader({context}: Route.LoaderArgs) {
 
 export default function Cart() {
   const cart = useLoaderData<typeof loader>();
-
+  const count = cart?.totalQuantity ?? 0;
   return (
-    <div className="cart">
-      <h1>Cart</h1>
+    <div className="mx-auto box-border flex max-w-[1280px] flex-col gap-8 px-4 pb-24 md:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <PageHead eyebrow={`${count} ${count === 1 ? 'libro' : 'libros'}`} title="Tu selección" lead={count ? 'Lo que elegiste para llevarte. Revísalo antes de sellar.' : undefined} />
+        <Link to="/collections/all" className="inline-flex min-h-11 items-center text-[17px] font-extrabold no-underline">
+          ← Seguir explorando
+        </Link>
+      </div>
       <CartMain layout="page" cart={cart} />
     </div>
   );

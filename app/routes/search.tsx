@@ -1,259 +1,182 @@
-import {useLoaderData} from 'react-router';
+import {Form, Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/search';
-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
-import {SearchForm} from '~/components/SearchForm';
-import {SearchResults} from '~/components/SearchResults';
-import {
-  type RegularSearchReturn,
-  type PredictiveSearchReturn,
-  getEmptyPredictiveSearchResult,
-} from '~/lib/search';
-import type {
-  RegularSearchQuery,
-  PredictiveSearchQuery,
-} from 'storefrontapi.generated';
+import {Analytics} from '@shopify/hydrogen';
+import {type PredictiveSearchReturn, getEmptyPredictiveSearchResult} from '~/lib/search';
+import type {PredictiveSearchQuery} from 'storefrontapi.generated';
+import {BookGrid} from '~/components/books';
+import {useQuickView} from '~/components/QuickView';
+import {Icon, Cobweb} from '~/components/brand/Icons';
+import {Banner, ChipLink, Crumbs, Eyebrow, SectionHead} from '~/components/ui';
+import {BOOK_CARD_FRAGMENT, SHELVES, type BookCardProduct} from '~/lib/book';
 
-export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Search`}];
-};
+export const meta: Route.MetaFunction = ({data}) => [
+  {title: data && 'term' in data && data.term ? `«${data.term}» | Búsqueda | La Buhardilla` : 'Búsqueda | La Buhardilla'},
+];
 
 export async function loader({request, context}: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const isPredictive = url.searchParams.has('predictive');
-  const searchPromise: Promise<PredictiveSearchReturn | RegularSearchReturn> =
-    isPredictive
-      ? predictiveSearch({request, context})
-      : regularSearch({request, context});
-
-  searchPromise.catch((error: Error) => {
-    console.error(error);
-    return {term: '', result: null, error: error.message};
-  });
-
-  return await searchPromise;
+  if (url.searchParams.has('predictive')) return predictiveSearch({request, context});
+  return regularSearch({request, context});
 }
 
-/**
- * Renders the /search route
- */
 export default function SearchPage() {
-  const {type, term, result, error} = useLoaderData<typeof loader>();
-  if (type === 'predictive') return null;
+  const data = useLoaderData<typeof loader>();
+  const {open, modal} = useQuickView();
+  if (data.type === 'predictive') return null;
+  const {term, books, suggestions, fallback, total} = data;
+  const authors = [...new Set(books.map((b) => b.vendor))];
 
   return (
-    <div className="search">
-      <h1>Search</h1>
-      <SearchForm>
-        {({inputRef}) => (
-          <>
-            <input
-              defaultValue={term}
-              name="q"
-              placeholder="Search…"
-              ref={inputRef}
-              type="search"
-            />
-            &nbsp;
-            <button type="submit">Search</button>
-          </>
-        )}
-      </SearchForm>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {!term || !result?.total ? (
-        <SearchResults.Empty />
-      ) : (
-        <SearchResults result={result} term={term}>
-          {({articles, pages, products, term}) => (
-            <div>
-              <SearchResults.Products products={products} term={term} />
-              <SearchResults.Pages pages={pages} term={term} />
-              <SearchResults.Articles articles={articles} term={term} />
+    <div className="mx-auto box-border flex max-w-[1280px] flex-col gap-10 px-4 pb-24 md:gap-14 md:px-6">
+      <div className="flex flex-col gap-5">
+        <Crumbs items={[{label: 'Inicio', to: '/'}, {label: 'Búsqueda'}]} />
+        <Form method="get" role="search" className="flex min-h-[60px] max-w-[680px] items-center gap-2 rounded-full border-[1.5px] border-witch bg-white py-1.5 pl-5 pr-1.5 shadow-[0_14px_30px_-24px_rgba(46,16,101,.6)]">
+          <span className="flex text-witch">
+            <Icon name="search" size={20} />
+          </span>
+          <label htmlFor="q" className="sr-only">
+            Buscar en la buhardilla
+          </label>
+          <input id="q" name="q" type="search" defaultValue={term} placeholder="Busca un título o autor" className="min-h-[46px] min-w-0 flex-1 border-0 bg-transparent font-sans text-[17px] font-bold text-midnight outline-none" />
+          <button type="submit" className="btn-main btn-primary min-h-[46px] flex-none cursor-pointer rounded-full border-0 px-6 font-sans text-[15px] font-extrabold">
+            Buscar
+          </button>
+        </Form>
+      </div>
+
+      {term && total ? (
+        <section className="flex flex-col gap-7">
+          <div className="flex flex-col gap-2">
+            <Eyebrow>
+              {total} {total === 1 ? 'libro' : 'libros'}
+            </Eyebrow>
+            <h1 className="m-0 font-serif text-[28px] font-black leading-[1.1] md:text-[40px]">Resultados para «{term}»</h1>
+          </div>
+          {authors.length === 1 || SHELVES.length ? (
+            <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
+              <span className="mr-1 hidden text-sm font-bold text-ash md:inline">También:</span>
+              {authors.length === 1 ? (
+                <ChipLink to={`/search?q=${encodeURIComponent(authors[0])}`} sub="Autor">
+                  {authors[0]}
+                </ChipLink>
+              ) : null}
+              {SHELVES.filter((s) => s.handle !== 'novedades').map((s) => (
+                <ChipLink key={s.handle} to={`/collections/${s.handle}`} sub="Estante">
+                  {s.title}
+                </ChipLink>
+              ))}
             </div>
-          )}
-        </SearchResults>
+          ) : null}
+          <BookGrid books={books} onQuickView={open} min={190} />
+        </section>
+      ) : term ? (
+        <div className="flex flex-col gap-5">
+          <section className="relative flex flex-col items-center gap-3.5 overflow-hidden rounded-3xl bg-white px-5 py-9 text-center md:px-8 md:py-[52px]">
+            <Cobweb className="absolute left-0 top-0" />
+            <Icon name="ghost" size={60} strokeWidth={1.6} className="text-witch" />
+            <h1 className="m-0 font-serif text-[26px] font-black leading-[1.1] md:text-[34px]">Nada responde a «{term}»</h1>
+            {suggestions.length ? (
+              <p className="m-0 text-[17px] text-slate md:text-[19px]">
+                ¿Quisiste decir{' '}
+                <Link to={`/search?q=${encodeURIComponent(suggestions[0])}`} className="font-serif font-black italic">
+                  {suggestions[0]}
+                </Link>
+                ?
+              </p>
+            ) : null}
+            <ul className="m-0 mt-1.5 flex list-none flex-col items-start gap-2 p-0 text-left">
+              {['Revisa la ortografía.', 'Prueba con el autor o con una sola palabra.', 'Busca por estante: Horror, Thriller o Terror fantástico.'].map((t) => (
+                <li key={t} className="flex items-center gap-2.5 text-[15px] text-slate">
+                  <span aria-hidden="true" className="size-1.5 flex-none rounded-full bg-pumpkin-light" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm font-bold text-ash">Lo más buscado:</span>
+            <ChipLink to="/search?q=Lovecraft">Lovecraft</ChipLink>
+            <ChipLink to="/search?q=Drácula">Drácula</ChipLink>
+            <ChipLink to="/collections/ediciones-raras">Ediciones raras</ChipLink>
+          </div>
+        </div>
+      ) : (
+        <PageIntro />
       )}
-      <Analytics.SearchView data={{searchTerm: term, searchResults: result}} />
+
+      {!total && fallback.length ? (
+        <section className="flex flex-col gap-6">
+          <SectionHead eyebrow="Mientras tanto" title="Quizá te asuste esto" size="sm" />
+          <BookGrid books={fallback} onQuickView={open} min={190} />
+        </section>
+      ) : null}
+
+      <Banner
+        icon="book"
+        title="¿Buscas un libro que no tenemos?"
+        message="Dinos cuál: lo rastreamos con editoriales y librerías de viejo."
+        action="Pídenoslo"
+        to="/contacto?motivo=libro"
+      />
+      {modal}
+      <Analytics.SearchView data={{searchTerm: term, searchResults: {total, items: {}} as never}} />
     </div>
   );
 }
 
-/**
- * Regular search query and fragments
- * (adjust as needed)
- */
-const SEARCH_PRODUCT_FRAGMENT = `#graphql
-  fragment SearchProduct on Product {
-    __typename
-    handle
-    id
-    publishedAt
-    title
-    trackingParameters
-    vendor
-    selectedOrFirstAvailableVariant(
-      selectedOptions: []
-      ignoreUnknownOptions: true
-      caseInsensitiveMatch: true
-    ) {
-      id
-      image {
-        url
-        altText
-        width
-        height
-      }
-      price {
-        amount
-        currencyCode
-      }
-      compareAtPrice {
-        amount
-        currencyCode
-      }
-      selectedOptions {
-        name
-        value
-      }
-      product {
-        handle
-        title
-      }
-    }
-  }
-` as const;
-
-const SEARCH_PAGE_FRAGMENT = `#graphql
-  fragment SearchPage on Page {
-     __typename
-     handle
-    id
-    title
-    trackingParameters
-  }
-` as const;
-
-const SEARCH_ARTICLE_FRAGMENT = `#graphql
-  fragment SearchArticle on Article {
-    __typename
-    handle
-    id
-    title
-    trackingParameters
-  }
-` as const;
-
-const PAGE_INFO_FRAGMENT = `#graphql
-  fragment PageInfoFragment on PageInfo {
-    hasNextPage
-    hasPreviousPage
-    startCursor
-    endCursor
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/search
-export const SEARCH_QUERY = `#graphql
-  query RegularSearch(
-    $country: CountryCode
-    $endCursor: String
-    $first: Int
-    $language: LanguageCode
-    $last: Int
-    $term: String!
-    $startCursor: String
-  ) @inContext(country: $country, language: $language) {
-    articles: search(
-      query: $term,
-      types: [ARTICLE],
-      first: $first,
-    ) {
-      nodes {
-        ...on Article {
-          ...SearchArticle
-        }
-      }
-    }
-    pages: search(
-      query: $term,
-      types: [PAGE],
-      first: $first,
-    ) {
-      nodes {
-        ...on Page {
-          ...SearchPage
-        }
-      }
-    }
-    products: search(
-      after: $endCursor,
-      before: $startCursor,
-      first: $first,
-      last: $last,
-      query: $term,
-      sortKey: RELEVANCE,
-      types: [PRODUCT],
-      unavailableProducts: HIDE,
-    ) {
-      nodes {
-        ...on Product {
-          ...SearchProduct
-        }
-      }
-      pageInfo {
-        ...PageInfoFragment
-      }
-    }
-  }
-  ${SEARCH_PRODUCT_FRAGMENT}
-  ${SEARCH_PAGE_FRAGMENT}
-  ${SEARCH_ARTICLE_FRAGMENT}
-  ${PAGE_INFO_FRAGMENT}
-` as const;
-
-/**
- * Regular search fetcher
- */
-async function regularSearch({
-  request,
-  context,
-}: Pick<
-  Route.LoaderArgs,
-  'request' | 'context'
->): Promise<RegularSearchReturn> {
-  const {storefront} = context;
-  const url = new URL(request.url);
-  const variables = getPaginationVariables(request, {pageBy: 8});
-  const term = String(url.searchParams.get('q') || '');
-
-  // Search articles, pages, and products for the `q` term
-  const {
-    errors,
-    ...items
-  }: {errors?: Array<{message: string}>} & RegularSearchQuery =
-    await storefront.query(SEARCH_QUERY, {
-      variables: {...variables, term},
-    });
-
-  if (!items) {
-    throw new Error('No search data returned from Shopify API');
-  }
-
-  const total = Object.values(items).reduce(
-    (acc: number, {nodes}: {nodes: Array<unknown>}) => acc + nodes.length,
-    0,
+function PageIntro() {
+  return (
+    <div className="flex flex-col gap-2">
+      <Eyebrow>Búsqueda</Eyebrow>
+      <h1 className="m-0 font-serif text-[28px] font-black md:text-[40px]">¿Qué buscas en la oscuridad?</h1>
+      <p className="m-0 text-[17px] text-ash">Escribe un título, un autor o un estante.</p>
+    </div>
   );
-
-  const error = errors
-    ? errors.map(({message}: {message: string}) => message).join(', ')
-    : undefined;
-
-  return {type: 'regular', term, error, result: {total, items}};
 }
 
-/**
- * Predictive search query and fragments
- * (adjust as needed)
- */
+const SEARCH_QUERY = `#graphql
+  query BookSearch($country: CountryCode, $language: LanguageCode, $term: String!)
+  @inContext(country: $country, language: $language) {
+    search(query: $term, types: [PRODUCT], first: 24, unavailableProducts: LAST) {
+      totalCount
+      nodes {
+        ... on Product {
+          ...BookCard
+        }
+      }
+    }
+    fallback: collection(handle: "novedades") {
+      products(first: 4) {
+        nodes {
+          ...BookCard
+        }
+      }
+    }
+    suggestions: predictiveSearch(query: $term, limit: 3, types: [QUERY]) {
+      queries {
+        text
+      }
+    }
+  }
+  ${BOOK_CARD_FRAGMENT}
+` as const;
+
+async function regularSearch({request, context}: Pick<Route.LoaderArgs, 'request' | 'context'>) {
+  const url = new URL(request.url);
+  const term = String(url.searchParams.get('q') || '').trim();
+  if (!term) return {type: 'regular' as const, term, books: [] as BookCardProduct[], total: 0, suggestions: [] as string[], fallback: [] as BookCardProduct[]};
+  const data = await context.storefront.query(SEARCH_QUERY, {variables: {term}});
+  const books = (data.search.nodes.filter((n) => 'handle' in n) as BookCardProduct[]).filter((b) => b.handle !== 'club-de-medianoche');
+  return {
+    type: 'regular' as const,
+    term,
+    books,
+    total: books.length,
+    suggestions: (data.suggestions?.queries ?? []).map((q) => q.text).filter((t) => t.toLowerCase() !== term.toLowerCase()),
+    fallback: (data.fallback?.products.nodes ?? []) as BookCardProduct[],
+  };
+}
+
 const PREDICTIVE_SEARCH_ARTICLE_FRAGMENT = `#graphql
   fragment PredictiveArticle on Article {
     __typename
@@ -305,6 +228,13 @@ const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
     id
     title
     handle
+    vendor
+    coverBg: metafield(namespace: "custom", key: "cover_bg") {
+      value
+    }
+    coverInk: metafield(namespace: "custom", key: "cover_ink") {
+      value
+    }
     trackingParameters
     selectedOrFirstAvailableVariant(
       selectedOptions: []
