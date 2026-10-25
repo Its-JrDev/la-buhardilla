@@ -30,9 +30,9 @@ jobs:
       - name: Validate Code
         run: npm run typecheck
 
-      - name: Deploy to Oxygen
+      - name: Deploy to Oxygen Production
         if: env.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN != ''
-        run: npx shopify hydrogen deploy
+        run: npx shopify hydrogen deploy --env-branch main
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN }}
 
